@@ -1,30 +1,97 @@
+# =====================================================================
+# SkillSwap - environnement de développement
+#
+# Services :
+#   web     : Apache + PHP 8.5.10
+#   db      : MySQL 8.4
+#   adminer : interface web pour administrer la base
+#
+# Démarrage :
+#   docker compose up -d --build
+#
+# Arrêt :
+#   docker compose down
+#
+# Réinitialisation complète de la BDD :
+#   docker compose down -v
+# =====================================================================
+
 services:
+
   web:
-    image: php:8.5.10-apache
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+
+    container_name: skillswap-web
+
     ports:
       - "8080:80"
+
     volumes:
-      - ./public:/var/www/html
+      # Tout le projet est disponible dans le conteneur.
+      # Apache ne sert que le dossier public/.
+      - ./:/var/www/html
+
+    working_dir: /var/www/html
+
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
 
   db:
     image: mysql:8.4
+
+    container_name: skillswap-db
+
     ports:
       - "13306:3306"
+
     environment:
-      MYSQL_ROOT_PASSWORD: skillswap
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: skillswap
       MYSQL_USER: skillswap
       MYSQL_PASSWORD: skillswap
+
     volumes:
+      # Données persistantes de MySQL.
       - db_data:/var/lib/mysql
-      - ./data:/docker-entrypoint-initdb.d
+
+      # Scripts SQL d'initialisation.
+      # Ils sont exécutés uniquement lors de la création
+      # initiale du volume MySQL.
+      - ./sql:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-uskillswap",
+          "-pskillswap"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
 
   adminer:
     image: adminer:latest
+
+    container_name: skillswap-adminer
+
     ports:
       - "8081:8080"
- 
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+
 volumes:
   db_data:
