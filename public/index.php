@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/../inc/fonctions.php';
 $competences = require __DIR__ . '/../data/competences.php';
 ?>
 
@@ -16,12 +17,16 @@ $competences = require __DIR__ . '/../data/competences.php';
     <table border="1">
         <tr>
             <th>Compétence</th>
+            <th>Catégorie</th>
+            <th>Description</th>
+            <th>Couverture</th>
         </tr>
-        <?php foreach ($competences as $comptence): ?>
+        <?php foreach ($competences as $competence): ?>
             <tr>
-                <td><?= htmlspecialchars($comptence["libelle"]);?></td>
-                <td><?= htmlspecialchars($comptence["categorie"]);?></td>
-                <td><?= htmlspecialchars($comptence["description"]);?></td>
+                <td><?= htmlspecialchars($competence["libelle"]);?></td>
+                <td><?= htmlspecialchars($competence["categorie"]);?></td>
+                <td><?= htmlspecialchars($competence["description"]);?></td>
+                <td><?= calcul_badge($competence["nb_maitrises"]); ?></td>
             </tr>
         <?php endforeach; ?>
     </table>
